@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Globalization;
-record Student(string Nombre, int Edad, DateOnly FechaNacimiento, string Carrera);
+
 
 Console.WriteLine("Bienvenidos a Universidad Coppel");
 
@@ -58,3 +58,66 @@ static DateOnly ReadDate(string prompt)
     }
 }
 
+
+
+public class Student
+{
+    public string Nombre { get; init; }
+    public int Edad { get; init; }
+    public DateOnly FechaNacimiento { get; init; }
+    public string Carrera { get; init; }
+
+    public Student(string nombre, int edad, DateOnly fechaNacimiento, string carrera)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) throw new ArgumentException("Nombre no puede estar vacío.", nameof(nombre));
+        if (edad < 0) throw new ArgumentOutOfRangeException(nameof(edad), "Edad no puede ser negativa.");
+        if (fechaNacimiento > DateOnly.FromDateTime(DateTime.Today)) throw new ArgumentException("Fecha de nacimiento no puede estar en el futuro.", nameof(fechaNacimiento));
+        if (string.IsNullOrWhiteSpace(carrera)) throw new ArgumentException("Carrera no puede estar vacía.", nameof(carrera));
+
+        Nombre = nombre.Trim();
+        Edad = edad;
+        FechaNacimiento = fechaNacimiento;
+        Carrera = carrera.Trim();
+    }
+
+    // Constructor parameterless opcional (útil para serialización)
+    public Student()
+    {
+        Nombre = string.Empty;
+        Edad = 0;
+        FechaNacimiento = DateOnly.FromDateTime(DateTime.Today);
+        Carrera = string.Empty;
+    }
+
+    // Edad calculada a partir de FechaNacimiento (más fiable que la edad ingresada)
+    public int EdadCalculada
+    {
+        get
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var age = today.Year - FechaNacimiento.Year;
+            if (today < FechaNacimiento.AddYears(age)) age--;
+            return age;
+        }
+    }
+
+    public void Deconstruct(out string nombre, out int edad, out DateOnly fechaNacimiento, out string carrera)
+    {
+        nombre = Nombre;
+        edad = Edad;
+        fechaNacimiento = FechaNacimiento;
+        carrera = Carrera;
+    }
+
+    // Crea una copia modificada (similar a 'with' de records)
+    public Student With(string? nombre = null, int? edad = null, DateOnly? fechaNacimiento = null, string? carrera = null) =>
+        new Student(
+            nombre ?? Nombre,
+            edad ?? Edad,
+            fechaNacimiento ?? FechaNacimiento,
+            carrera ?? Carrera
+        );
+
+    public override string ToString() =>
+        $"{Nombre} - {Carrera} | Edad (ingresada): {Edad} | Nac: {FechaNacimiento:dd/MM/yyyy} | Edad calculada: {EdadCalculada}";
+}
